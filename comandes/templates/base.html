@@ -223,7 +223,9 @@
         <p>Podeu copiar-ho tant com vulgueu i, per suposat, contribuir-hi :)</p>
     </div>
 
+    {% load static %}
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static "js/main.js" %}"></script>
     <script>
         {% block custom_scripts %}
         {% endblock %}
