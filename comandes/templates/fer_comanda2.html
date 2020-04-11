@@ -106,9 +106,9 @@
                         <div class="prod">{{aprod.producte.nom}}</div>
                         <input name="preu-{{aprod.producte.id}}" value="{{aprod.producte.preu}}" disabled>
                     {% if aprod.producte.granel %}
-                        <input name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}" step="0.1" />
+                        <input name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}" step="any" />
                     {% else %}
-                        <input name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}" />
+                        <input name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}" step="any" />
                     {% endif %}
                     
                     </div>
