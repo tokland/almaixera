@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 from django.core.mail import EmailMessage
-from comandes.models import GlobalConf, Soci
+from .comandes.models import GlobalConf, Soci
 
 dows = ['dilluns','dimarts','dimecres','dijous','divendres','dissabte','diumenge']
 
