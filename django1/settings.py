@@ -1,13 +1,15 @@
 # Django settings for django1 project.
-import os, sys
+import os
+import sys
+from . import email_settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-DEBUG = True
+DEBUG = False
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
-    ('Enricus', 'emieza@xtec.cat'),
+    ('Admin', 'rostollverdcoop@gmail.com'),
 )
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -18,10 +20,12 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',         # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(BASE_DIR,'db.sqlite3'),    # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        #'ENGINE': 'django.db.backends.sqlite3',         # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        #'NAME': os.path.join(BASE_DIR,'db.sqlite3'),    # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
-        'USER': '',
+        'NAME': 'rostoll',
+        'USER': 'root',
         'PASSWORD': '',
         'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
@@ -190,8 +194,7 @@ LOGGING = {
 }
 
 # EMAIL SETTINGS
-DEFAULT_FROM_EMAIL = "Coopes online<info@almaixera.cat>"
-import email_settings
+DEFAULT_FROM_EMAIL = "Rostoll Verd <rostollverdcoop@gmail.com>"
 
 EMAIL_HOST = email_settings.EMAIL_HOST
 EMAIL_HOST_USER = email_settings.EMAIL_HOST_USER
