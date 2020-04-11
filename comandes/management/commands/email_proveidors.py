@@ -39,7 +39,6 @@ Merci
         # activacions
         activacions = ActivaProveidor.objects.filter(actiu=True)
         for act in activacions:
-            print("Activacio: ",act)
             adminemails = copy.copy(superadmin_emails)
             # per cada activacio sabem proveidor i coope
             prov = act.proveidor
@@ -71,8 +70,6 @@ Merci
                     .values('producte__nom','producte__granel')\
                     .annotate(Sum('quantitat'))\
                     .order_by('producte__nom')
-            # debug
-            #print(act, data)
             # afegim productes al informe
             if len(detalls):
                 informe += "\n" + "Cooperativa "+coope.nom.upper()+"\n"
@@ -85,7 +82,7 @@ Merci
                     informe += " unitats-manats\n"
             # afegim dades coopeadmins pel proveidor
             if not hihaproductes:
-                print("No hi ha productes per ", act)
+                print("No hi ha productes")
             else:
                 coopeadmins = Soci.objects.filter(cooperativa=coope,user__groups__name='coopeadmin')
                 for coopeadmin in coopeadmins:
@@ -106,7 +103,6 @@ Merci
                 email.cc = adminemails
                 email.to = to_emails
                 #debug
-                #print(email.message())
                 # Envia email
                 try:
                     if email.send():
@@ -118,4 +114,3 @@ Merci
                         print("ERROR 1 enviant email")
                 except:
                     print("ERROR 2 enviant email")
-                    

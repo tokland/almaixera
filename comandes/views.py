@@ -157,7 +157,6 @@ def fer_comanda2(request):
         comanda = Comanda.objects.filter(soci=request.user.soci,data_recollida=data_recollida)
         if len(comanda):
             # existeix comanda
-            print("Existeix comanda prèvia")
             comanda = comanda[0]
         else:
             # si no existeix comanda, la creem
@@ -167,7 +166,6 @@ def fer_comanda2(request):
                         data_recollida=data_recollida,
                     )
             comanda.save()
-            print("Nova comanda creada")
         # traiem el que no siguin dades de productes
         dades = dict(request.POST)
         dades.pop("csrfmiddlewaretoken")
@@ -210,7 +208,6 @@ def fer_comanda2(request):
         for ap in aproductes2:
             ap.quantitat = 0
         # existeix comanda: carreguem dades
-        print("Existeix comanda prèvia")
         comanda = comanda[0]
         detalls = DetallComanda.objects.filter(comanda=comanda)
         for detall in detalls:
@@ -218,7 +215,6 @@ def fer_comanda2(request):
             # fer doble iteració és poc elegant. TODO: trobar millor?
             for ap in aproductes2:
                 if ap.producte.id == detall.producte.id:
-                    #print("q="+str(detall.quantitat))
                     ap.quantitat = "{:1.1f}".format(detall.quantitat)
                     continue
     # arribats aquí, renderitzem el formulari
