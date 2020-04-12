@@ -1,5 +1,5 @@
 # Create your views here.
-
+import json
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
@@ -223,6 +223,7 @@ def fer_comanda2(request):
                         'productes':productes,
                         'aproductes':aproductes2,
                         'increment':coope.increment_preu,
+                        "products_by_id_json": json.dumps(get_products_by_id(productes)),
                         #'quantitats':quantitats,
                         #'missatge':"ERROR: dades incorrectes"
                     })
@@ -581,3 +582,16 @@ def distribueix_productes( request, data_recollida, producte ):
                 {"producte": producte_obj, "data":data,
                 "detalls_formset":detalls_formset} )
 
+
+def get_products_by_id(products):
+    products_by_id = {}
+    for product in products:
+        product_id = product.pk
+        products_by_id[product_id] = dict(
+            id=product_id,
+            name=product.nom,
+            provider=product.proveidor.nom,
+            price=float(product.preu),
+            units=not(product.granel)
+        )
+    return products_by_id
