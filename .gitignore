@@ -4,3 +4,6 @@ db.sqlite3
 email_settings.py
 migrations
 env/
+static/
+virtualenv*
+django1/settings.py
