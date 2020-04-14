@@ -5,7 +5,7 @@ from . import email_settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-DEBUG = False
+DEBUG = True
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -26,9 +26,9 @@ DATABASES = {
         # The following settings are not used with sqlite3:
         'NAME': 'rostoll',
         'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        'PASSWORD': '5jitk9',
+        'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': '3306',                      # Set to empty string for default.
     }
 }
 
