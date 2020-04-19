@@ -42,6 +42,10 @@ background-color: #86A328;
 border-color: #86A328;
 }
 
+.provider-contents {
+  max-height: 300px
+}
+
 /* Basket */
 .products { display: flex }
 .products-list { width: 50%; padding: 5px }
@@ -114,7 +118,7 @@ border-color: #86A328;
           {% else %}
         </div>
         <h3>{{aprod.producte.proveidor.nom}}</h3>
-        <div>
+        <div class="provider-contents">
           {% endif %}
           {% endifchanged %}
           <div id="producte-{{aprod.producte.id}}" class="product {% cycle 'senar' 'parell' %}">
