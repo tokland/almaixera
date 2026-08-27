@@ -35,7 +35,8 @@ Informe per proveïdors - {{data|date:'SHORT_DATE_FORMAT'}} - {{cooperativa}}
     {% for prod in prov.list %}
     <tr>
         <td>{{prod.producte__nom}}</td>
-        <td style="text-align:center;">{{prod.quantitat__sum}}
+	<td style="text-align:center;" contenteditable>
+		<span>{{prod.quantitat__sum}}</span>
         {% if prod.producte__granel %}
         kgs.
         {% else %}
