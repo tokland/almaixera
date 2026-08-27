@@ -1,0 +1,23 @@
+.git
+.git.old
+.gitignore
+
+# Database dumps are mounted at start time, never baked into the image.
+*.sql.gz
+*.sql
+data/
+db.sqlite3
+
+# Rebuilt by collectstatic during the build.
+static/
+
+__pycache__/
+*.py[cod]
+env/
+virtualenv*
+.python-version
+*.code-workspace
+
+# Big local fixtures, not needed to run the app.
+almaixera*.json
+natureco/

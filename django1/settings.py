@@ -5,8 +5,8 @@ from . import email_settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-#DEBUG = True
-DEBUG = False
+# Off by default (production); set DJANGO_DEBUG=1 for development.
+DEBUG = os.environ.get('DJANGO_DEBUG', '0') == '1'
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -25,11 +25,12 @@ DATABASES = {
         #'ENGINE': 'django.db.backends.sqlite3',         # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         #'NAME': os.path.join(BASE_DIR,'db.sqlite3'),    # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
-        'NAME': 'rostoll',
-        'USER': 'root',
-        'PASSWORD': '5jitk9',
-        'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '3306',                      # Set to empty string for default.
+        'NAME': os.environ.get('DB_NAME', 'rostoll'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '5jitk9'),
+        # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
@@ -162,6 +163,7 @@ INSTALLED_APPS = (
     'comandes',
     #'south', # not needed in django 1.7 and forward
 )
+
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 

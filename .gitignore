@@ -7,3 +7,6 @@ env/
 static/
 virtualenv*
 django1/settings.py
+
+# Database dumps: real member data, never commit these.
+*.sql.gz
