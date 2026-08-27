@@ -161,9 +161,24 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'comandes',
+    'rest_framework',
     #'south', # not needed in django 1.7 and forward
 )
 
+# API REST de productes (comandes/api.py). BasicAuthentication hi es perque
+# els scripts puguin cridar-la sense haver de gestionar el token CSRF que
+# SessionAuthentication exigeix als DELETE.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+}
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
