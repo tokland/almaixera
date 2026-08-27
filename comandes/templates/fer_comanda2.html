@@ -126,10 +126,10 @@ border-color: #86A328;
             <input class="price" name="preu-{{aprod.producte.id}}" value="{{aprod.producte.preu}}" disabled>
             {% if aprod.producte.granel %}
             <input class="quantity" name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}"
-              step="any" />
+              min="0" step="any" />
             {% else %}
             <input class="quantity" name="quantitat-{{aprod.producte.id}}" type="number" value="{{aprod.quantitat}}"
-              step="any" />
+              min="0" step="any" />
             {% endif %}
 
           </div>
