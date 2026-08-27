@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin
 from django import forms
 from datetime import datetime
-from .helpers import regenera_activacions
+from .helpers import regenera_activacions, productes_visibles
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 class DetallInline(admin.TabularInline):
@@ -57,17 +57,8 @@ class ProducteAdmin(admin.ModelAdmin):
     ordering = ('nom',)
     actions = [ activa , desactiva ]
     def get_queryset(self,request):
-        qs = super(ProducteAdmin,self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        # si es proveidor nomes li mostrem els seus propis productes
-        if hasattr(request.user,'proveidor'):
-            qs = qs.filter(proveidor=request.user.proveidor)
-        else:
-            # veiem nomes els productes de proveidors que no tinguin usuari
-            provs = Proveidor.objects.filter(user=None)
-            qs = qs.filter(proveidor__in=provs)
-        return qs
+        # mateixa regla que l'API (comandes/api.py)
+        return productes_visibles(request.user)
 
 """
     SOCIS: nom, cognom i email estan al model auth.User

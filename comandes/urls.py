@@ -1,14 +1,21 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
 from django.urls import path
 from django.contrib.auth.views import \
     PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, \
     PasswordResetCompleteView, LoginView, LogoutView
 
+from rest_framework import routers
+
 from comandes import views
+from comandes.api import ProducteViewSet
 from comandes.class_views.boxes_report import BoxesReportView
+
+router = routers.DefaultRouter()
+router.register(r'productes', ProducteViewSet, basename='producte')
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    url(r'^api/', include(router.urls)),
     url(r'^fer_comanda$', views.fer_comanda, name='fer_comanda'),
     url(r'^fer_comanda2$', views.fer_comanda2, name='fer_comanda2'),
     url(r'^esborra_comanda', views.esborra_comanda, name='esborra_comanda'),

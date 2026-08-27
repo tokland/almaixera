@@ -113,3 +113,19 @@ def regenera_activacions( request ):
                 #activa_prod.actiu = False
                 activa_prod.save()
     
+
+
+def productes_visibles( user ):
+    """Productes que un usuari pot veure.
+
+    Mateixa regla que fa servir el Django admin (ProducteAdmin.get_queryset):
+    l'admin ho veu tot, un proveidor nomes els seus productes, i la resta
+    nomes els productes de proveidors que no tenen usuari. L'API
+    (comandes/api.py) la comparteix perque no ensenyi mai mes que l'admin.
+    """
+    qs = Producte.objects.all()
+    if user.is_superuser:
+        return qs
+    if hasattr(user, 'proveidor'):
+        return qs.filter(proveidor=user.proveidor)
+    return qs.filter(proveidor__in=Proveidor.objects.filter(user=None))
