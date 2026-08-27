@@ -5,17 +5,18 @@ from . import email_settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-DEBUG = True
+#DEBUG = True
+DEBUG = False
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
     ('Admin', 'rostollverdcoop@gmail.com'),
 )
 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 3600
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 3600 * 24 * 365
 LOGIN_URL = '/accounts/login/'
-
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 MANAGERS = ADMINS
 
 DATABASES = {
