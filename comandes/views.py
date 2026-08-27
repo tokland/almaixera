@@ -142,6 +142,7 @@ def fer_comanda2(request):
         return menu(request,"ERROR: data invalida o inexistent")
     # comprovar tancament TEST
     coope = request.user.soci.cooperativa
+    # comentar per treure limitacio de data
     if recollida_tancada(data_recollida, coope):
         return menu(request,"ERROR: comanda tancada")
 
@@ -361,7 +362,7 @@ def veure_comandes(request):
     soci = user.soci
     # si soci: veu les seves comandes
     avui = date.today()
-    desde = avui-timedelta(31)
+    desde = avui-timedelta(31*2)
     fins = avui+timedelta(31)
     increment = 0.0
     if request.user.soci:
