@@ -17,6 +17,12 @@ ENV PYTHONUNBUFFERED=1 \
 # mariadb-server replaces the MySQL 5.7 that production runs; it reads 5.7
 # dumps unchanged. default-libmysqlclient-dev + gcc are only needed to compile
 # mysqlclient, so they are removed again in the same layer.
+#
+# cron runs the weekly provider sync (see docker/entrypoint.sh); python3 is
+# bullseye's 3.9, which the providers/ scripts need -- they use PEP 585
+# generics and typing.Final, neither of which exists in the 3.7 that Django
+# runs on. The two interpreters are independent: providers/ is standard
+# library only and never imports Django.
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -24,6 +30,8 @@ RUN set -eux; \
         mariadb-client \
         gzip \
         procps \
+        cron \
+        python3 \
     ; \
     rm -rf /var/lib/apt/lists/*
 

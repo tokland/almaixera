@@ -15,6 +15,16 @@ RELOAD_DB=${RELOAD_DB:-0}
 DB_NAME=${DB_NAME:-rostoll}
 DB_PASSWORD=${DB_PASSWORD:-5jitk9}
 
+# Weekly provider sync (providers/ecoplaza). It only runs when a password is
+# given, so a plain dev container never touches the ecoplaza store.
+SYNC_USER=${SYNC_USER:-admin}
+SYNC_PASSWORD=${SYNC_PASSWORD:-}
+SYNC_SCHEDULE=${SYNC_SCHEDULE:-"0 1 * * 3"}   # Wednesday at 01:00
+SYNC_TZ=${SYNC_TZ:-Europe/Madrid}
+SYNC_ARGS=${SYNC_ARGS:-}
+SYNC_ENV_FILE=/etc/almaixera-sync.env
+CRON_FILE=/etc/cron.d/almaixera-ecoplaza
+
 log() { printf '[almaixera] %s\n' "$*"; }
 
 mysql_root() { mysql --protocol=socket -u root "$@"; }
@@ -82,6 +92,54 @@ seed_database() {
     log "restore finished"
 }
 
+# Registers the weekly ecoplaza sync with cron and starts crond.
+#
+# Cron jobs get an almost empty environment and cannot see the container's,
+# so the credentials are written to a root-only env file that the job sources
+# (see providers/ecoplaza/cron-sync.sh).
+#
+# Timezone: the container clock is UTC, but the schedule is meant as local
+# Spanish time, and 01:00 has to stay 01:00 across DST. Debian's cron does NOT
+# support the CRON_TZ crontab variable that cronie has -- it schedules with
+# localtime(), so the timezone has to come from the daemon's own environment.
+# The TZ line in the crontab file gives the job itself the same clock, so its
+# timestamps match the schedule.
+start_sync_cron() {
+    if [ -z "$SYNC_PASSWORD" ]; then
+        log "provider sync disabled (no SYNC_PASSWORD); pass --sync-password to enable"
+        rm -f "$CRON_FILE"
+        return 0
+    fi
+
+    # Single-quoted values: the file is sourced by the job, and a password is
+    # allowed to contain spaces, $ or backslashes.
+    quote() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
+
+    umask 077
+    cat > "$SYNC_ENV_FILE" <<EOF
+ALMAIXERA_URL=$(quote "http://127.0.0.1:${PORT}")
+ALMAIXERA_USER=$(quote "$SYNC_USER")
+ALMAIXERA_PASSWORD=$(quote "$SYNC_PASSWORD")
+SYNC_ARGS=$(quote "$SYNC_ARGS")
+EOF
+    umask 022
+
+    # A cron.d file needs the user column and a trailing newline, or cron
+    # silently ignores it.
+    cat > "$CRON_FILE" <<EOF
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+TZ=${SYNC_TZ}
+
+${SYNC_SCHEDULE} root /app/providers/ecoplaza/cron-sync.sh
+EOF
+    chmod 0644 "$CRON_FILE"
+
+    mkdir -p /var/log/almaixera /var/lib/almaixera/providers/ecoplaza
+    log "provider sync scheduled: '${SYNC_SCHEDULE}' ${SYNC_TZ} (user ${SYNC_USER})"
+    TZ="$SYNC_TZ" cron
+}
+
 shutdown_database() {
     log "stopping mariadb"
     mysqladmin --protocol=socket -u root -p"$DB_PASSWORD" shutdown >/dev/null 2>&1 || true
@@ -102,6 +160,7 @@ main() {
     trap shutdown_database EXIT INT TERM
     configure_database
     seed_database
+    start_sync_cron
 
     if [ "$#" -gt 0 ]; then
         log "running: $*"

@@ -11,6 +11,13 @@
 #   -r, --reload-db       restore the dump even if this container's volume was
 #                         already seeded (destroys the current database)
 #   -f, --foreground      stay attached instead of detaching
+#       --sync-password P almaixera password for the weekly provider sync;
+#                         without it no sync is scheduled (env: SYNC_PASSWORD)
+#       --sync-user U     almaixera user for that sync (default: admin)
+#       --sync-schedule C cron expression for it (default: "0 1 * * 3",
+#                         Wednesday at 01:00 Europe/Madrid)
+#       --sync-args "..." extra flags for providers/ecoplaza/sync.sh,
+#                         e.g. --dry-run
 #   -h, --help            this message
 #
 # The dump is a START-time argument, never a build-time one: it holds real
@@ -31,6 +38,13 @@ RELOAD_DB=0
 DETACH=1
 DUMP=
 
+# Sync credentials never live in the repo or the image: they are passed in
+# here and end up as container environment (see docker/entrypoint.sh).
+SYNC_USER=${SYNC_USER:-}
+SYNC_PASSWORD=${SYNC_PASSWORD:-}
+SYNC_SCHEDULE=${SYNC_SCHEDULE:-}
+SYNC_ARGS=${SYNC_ARGS:-}
+
 die() { echo "error: $*" >&2; exit 1; }
 usage() { sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//; $d'; }
 
@@ -41,6 +55,10 @@ while [ "$#" -gt 0 ]; do
         -n|--name)       NAME=${2:?}; shift 2 ;;
         -r|--reload-db)  RELOAD_DB=1; shift ;;
         -f|--foreground) DETACH=0; shift ;;
+        --sync-user)     SYNC_USER=${2:?}; shift 2 ;;
+        --sync-password) SYNC_PASSWORD=${2:?}; shift 2 ;;
+        --sync-schedule) SYNC_SCHEDULE=${2:?}; shift 2 ;;
+        --sync-args)     SYNC_ARGS=${2:?}; shift 2 ;;
         -h|--help)       usage; exit 0 ;;
         -*)              die "unknown option: $1" ;;
         *)               [ -z "$DUMP" ] || die "only one dump can be given"; DUMP=$1; shift ;;
@@ -65,6 +83,14 @@ args=(run --name "$NAME" -p "${PORT}:5000"
 if [ "$MODE" = "dev" ]; then
     args+=(-e DJANGO_DEBUG=1 -v "${REPO_DIR}:/app")
 fi
+
+# Only forward what was actually given; the entrypoint has the defaults, and
+# an empty SYNC_PASSWORD is what keeps the sync switched off.
+for var in SYNC_USER SYNC_PASSWORD SYNC_SCHEDULE SYNC_ARGS; do
+    if [ -n "${!var}" ]; then
+        args+=(-e "${var}=${!var}")
+    fi
+done
 
 # The real SMTP credentials live outside the image; mount them when present so
 # prod sends mail and dev falls back to the sample.

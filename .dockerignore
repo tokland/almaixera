@@ -21,3 +21,7 @@ virtualenv*
 # Big local fixtures, not needed to run the app.
 almaixera*.json
 natureco/
+
+# Scrape output: regenerated inside the container on every sync.
+providers/*/products.json
+providers/*/skipped.csv

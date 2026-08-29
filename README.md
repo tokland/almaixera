@@ -93,6 +93,45 @@ No esta al repositori. La imatge hi posa el sample com a fallback; en mode
 prod, si tens django1/email_settings.py al working copy, docker/start.sh el
 munta a sobre perque els correus surtin de veritat.
 
+### Sincronitzacio setmanal amb els proveidors
+
+A providers/ hi ha els scripts que porten el cataleg d'un proveidor extern
+cap a almaixera. Ara mateix nomes n'hi ha un, providers/ecoplaza, que baixa
+tots els productes de la botiga ecoplaza i els puja per l'API de productes
+(crea, actualitza, i dona de baixa els que han desaparegut).
+
+La imatge porta cron i un python3 propi (el 3.9 de Debian: els scripts de
+providers/ necessiten sintaxi que el 3.7 de Django no te). La feina NOMES
+queda programada si dones una contrasenya, aixi un contenidor de dev normal
+no toca mai la botiga externa:
+
+	$ docker/start.sh --mode prod --sync-password 'secret' rostoll-db.sql.gz
+
+Opcions relacionades de docker/start.sh:
+
+	    --sync-password P   contrasenya d'almaixera per la sincronitzacio;
+	                        sense aixo no es programa res
+	    --sync-user U       usuari (per defecte: admin)
+	    --sync-schedule C   expressio cron (per defecte: "0 1 * * 3", es a
+	                        dir dimecres a la 01:00, hora Europe/Madrid)
+	    --sync-args "..."   arguments extra per providers/ecoplaza/sync.sh,
+	                        per exemple --dry-run
+
+El cron parla amb l'API per 127.0.0.1 dins del mateix contenidor, o sigui
+que no cal obrir res cap a fora. La contrasenya no entra ni al repositori ni
+a la imatge: l'entrypoint l'escriu a /etc/almaixera-sync.env (nomes root) i
+la feina la llegeix d'alla, mai per linia d'ordres.
+
+Comprovar-ho i executar-ho a ma:
+
+	$ docker exec almaixera-prod cat /etc/cron.d/almaixera-ecoplaza
+	$ docker exec almaixera-prod tail -f /var/log/almaixera/ecoplaza-sync.log
+	$ docker exec almaixera-prod /app/providers/ecoplaza/cron-sync.sh
+
+La sortida de cada execucio va al log i tambe a docker logs. Un flock evita
+que dues execucions se solapin si una triga mes del compte.
+
+
 
 API de productes
 ----------------
