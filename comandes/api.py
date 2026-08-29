@@ -35,6 +35,17 @@ def _parse_sku(notes):
     return match.group(1) if match else None
 
 
+def _clau_sku(notes):
+    """Clau de comparacio del codi: en minuscules, o None si no n'hi ha.
+
+    El marcador admet qualsevol espai (o cap) darrere els dos punts, i el
+    collation de MySQL no distingeix majuscules, aixi que dos productes que
+    per a la base de dades son el mateix codi han de ser-ho tambe aqui.
+    """
+    sku = _parse_sku(notes)
+    return sku.lower() if sku else None
+
+
 class ProducteViewSet(mixins.ListModelMixin,
                       mixins.RetrieveModelMixin,
                       mixins.CreateModelMixin,
@@ -116,12 +127,12 @@ class ProducteViewSet(mixins.ListModelMixin,
         instancies = []
         algun_creat = False
         with transaction.atomic():
+            if forcar:
+                # un usuari proveidor nomes pot tocar productes seus
+                items = [dict(dades, proveidor=proveidor_forcat) for dades in items]
+            index = self._index_per_sku(items)
             for dades in items:
-                if forcar:
-                    # un usuari proveidor nomes pot tocar productes seus
-                    dades = dict(dades)
-                    dades['proveidor'] = proveidor_forcat
-                instancia, creat = self._upsert_un(dades)
+                instancia, creat = self._upsert_un(dades, index)
                 instancies.append(instancia)
                 algun_creat = algun_creat or creat
 
@@ -131,30 +142,51 @@ class ProducteViewSet(mixins.ListModelMixin,
         codi = status.HTTP_201_CREATED if algun_creat else status.HTTP_200_OK
         return Response(cos, status=codi)
 
-    def _upsert_un(self, dades):
+    def _index_per_sku(self, items):
+        """Indexa per (proveidor, codi) els productes que la peticio pot tocar.
+
+        Es fa una sola consulta per a tot el lot -- abans se'n feia una per
+        element -- i el filtre nomes acota pel marcador, no pel format
+        concret: qui decideix si dos codis son iguals es _clau_sku(), que es
+        el mateix criteri amb que despres es llegeix el codi entrant.
+        """
+        proveidors = set(dades.get('proveidor') for dades in items)
+        proveidors.discard(None)
+        if not proveidors:
+            return {}
+
+        index = {}
+        candidats = Producte.objects.filter(
+            proveidor__in=proveidors,
+            notes__icontains=SKU_MARKER,
+        ).order_by('id')
+        for candidat in candidats:
+            clau = _clau_sku(candidat.notes)
+            if clau:
+                # si el mateix codi ja estigues repetit a la base de dades,
+                # ens quedem amb el producte mes antic
+                index.setdefault((candidat.proveidor_id, clau), candidat)
+        return index
+
+    def _upsert_un(self, dades, index):
         """Crea o actualitza un producte segons el codi 'ecoplaza-sku:'.
 
-        Retorna (instancia, creat_bool). El marcador es la clau natural: es
-        busca un producte del mateix proveidor amb el mateix codi. El filtre
-        __contains nomes acota; despres es compara el codi exacte per no
-        confondre '0004' amb '00047'.
+        Retorna (instancia, creat_bool). La clau natural es el parell
+        (proveidor, codi); veure _clau_sku() per com es comparen els codis.
         """
         proveidor = dades.get('proveidor')
-        sku = _parse_sku(dades.get('notes') or '')
+        clau = _clau_sku(dades.get('notes') or '')
+        clau_index = (proveidor.pk, clau) if (clau and proveidor is not None) else None
 
-        existent = None
-        if sku and proveidor is not None:
-            candidats = Producte.objects.filter(
-                proveidor=proveidor,
-                notes__contains='%s %s' % (SKU_MARKER, sku),
-            )
-            for candidat in candidats:
-                if _parse_sku(candidat.notes) == sku:
-                    existent = candidat
-                    break
+        existent = index.get(clau_index) if clau_index else None
 
         if existent is None:
-            return Producte.objects.create(**dades), True
+            instancia = Producte.objects.create(**dades)
+            if clau_index:
+                # perque un mateix codi repetit dins el mateix lot actualitzi
+                # el producte que s'acaba de crear enlloc de duplicar-lo
+                index[clau_index] = instancia
+            return instancia, True
 
         for camp, valor in dades.items():
             setattr(existent, camp, valor)
