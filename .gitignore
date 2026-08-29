@@ -10,3 +10,10 @@ django1/settings.py
 
 # Database dumps: real member data, never commit these.
 *.sql.gz
+
+# providers/: intermediate scrape output, regenerated on every sync.
+providers/*/products.json
+providers/*/skipped.csv
+
+# providers/: mypy scratch
+providers/*/.mypy_cache/
