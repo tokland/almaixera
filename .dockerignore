@@ -25,3 +25,7 @@ natureco/
 # Scrape output: regenerated inside the container on every sync.
 providers/*/products.json
 providers/*/skipped.csv
+
+# Server settings: holds the sync password. It reaches the container as
+# environment at run time, never baked into an image layer.
+docker/pro.env

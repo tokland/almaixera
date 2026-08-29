@@ -17,3 +17,6 @@ providers/*/skipped.csv
 
 # providers/: mypy scratch
 providers/*/.mypy_cache/
+
+# Server settings: holds the sync password. Never commit this.
+docker/pro.env

@@ -93,6 +93,80 @@ No esta al repositori. La imatge hi posa el sample com a fallback; en mode
 prod, si tens django1/email_settings.py al working copy, docker/start.sh el
 munta a sobre perque els correus surtin de veritat.
 
+### Deploy a PRO (zaudera)
+
+PRO es un contenidor docker (almaixera-prod) que corre al servidor zaudera,
+construit a partir del checkout que hi ha a ~/src/almaixera. Per pujar codi
+nou hi ha docker/deploy-pro.sh, que es llenca des de la maquina de
+desenvolupament:
+
+	$ docker/deploy-pro.sh --dry-run          # que s'enviaria, sense tocar res
+	$ docker/deploy-pro.sh                    # deploy de veritat
+
+Fa, per ordre: rsync del working copy cap al checkout del servidor, etiqueta
+la imatge que hi ha ara com a almaixera:previous (punt de tornada enrere),
+docker/build.sh al servidor, docker/start.sh --mode prod, i espera fins que
+l'aplicacio respon al port 5000.
+
+La base de dades NO es toca mai: no es passa cap dump a docker/start.sh, o
+sigui que el volum almaixera-prod-db es reutilitza tal com esta. Restaurar un
+dump sobre produccio continua sent una cosa manual i deliberada; l'script no
+te cap opcio per fer-ho.
+
+Tampoc s'envien django1/settings.py ni django1/email_settings.py: son fitxers
+del .gitignore i els bons son els del servidor. Amb --with-settings es poden
+enviar igualment, pero pensa-t'ho.
+
+#### Els secrets: docker/pro.env
+
+La contrasenya de la sincronitzacio no es posa mai a la linia d'ordres. Va a
+docker/pro.env, que es al .gitignore i tambe al .dockerignore (o sigui que no
+entra ni al repositori ni a la imatge):
+
+	$ cp docker/pro.env.sample docker/pro.env
+	$ chmod 600 docker/pro.env
+	$ $EDITOR docker/pro.env          # SYNC_PASSWORD=...
+
+deploy-pro.sh el copia al servidor amb permisos 600 i docker/start.sh el
+llegeix d'alla. Aixo vol dir que:
+
+- la contrasenya no queda a l'historial del shell ni a la linia d'ordres ssh;
+- si algun dia reinicies el contenidor a ma al servidor (docker/start.sh
+  --mode prod), la configuracio hi continua sent;
+- tampoc surt al llistat de processos del servidor: start.sh li passa a
+  docker nomes el nom de la variable, no el valor.
+
+El fitxer es KEY=value pla, no s'interpreta com a shell, o sigui que
+SYNC_SCHEDULE=0 1 * * 3 va tal qual, sense cometes. Les opcions de la linia
+d'ordres tenen preferencia sobre el fitxer.
+
+Opcions:
+
+	    HOST              destinacio ssh (per defecte: zaudera)
+	-d, --dir PATH        checkout al servidor (per defecte: ~/src/almaixera)
+	-n, --dry-run         ensenya que s'enviaria i para
+	    --delete          esborra al servidor els fitxers que ja no existeixen
+	    --with-settings   envia tambe settings.py i email_settings.py
+	    --restart POLICY  politica de reinici (per defecte: unless-stopped,
+	                      aixi un reboot torna a aixecar el web i el cron;
+	                      si pro.env porta RESTART, mana el fitxer)
+	    --env-file PATH   fitxer de configuracio a instal.lar al servidor
+	                      (per defecte docker/pro.env si existeix)
+	    --no-env-file     no copiar cap fitxer de configuracio
+	    --sync-password P sobreescriu puntualment el SYNC_PASSWORD del fitxer
+	    --no-build        no reconstrueix la imatge, nomes reinicia
+	    --prune           neteja imatges penjades al servidor (te poc disc)
+
+Si el deploy falla, l'script diu com tornar enrere:
+
+	$ ssh zaudera 'docker tag almaixera:previous almaixera:latest && \
+	    cd ~/src/almaixera && docker/start.sh --mode prod --restart unless-stopped'
+
+Amb docker/pro.env al lloc, el deploy i l'activacio de la sincronitzacio
+setmanal son la mateixa ordre, sense cap secret escrit:
+
+	$ docker/deploy-pro.sh
+
 ### Sincronitzacio setmanal amb els proveidors
 
 A providers/ hi ha els scripts que porten el cataleg d'un proveidor extern
@@ -130,7 +204,6 @@ Comprovar-ho i executar-ho a ma:
 
 La sortida de cada execucio va al log i tambe a docker logs. Un flock evita
 que dues execucions se solapin si una triga mes del compte.
-
 
 
 API de productes
@@ -230,6 +303,9 @@ $ python manage.py runserver
 
 Deploy
 ------
+(Notes antigues de la instal.lacio amb Apache + virtualenv. PRO ara corre amb
+docker a zaudera: veure "Deploy a PRO (zaudera)" mes amunt.)
+
 - clone project
 - adjust permissions: folder , db.sqlite3
 - configure virtualhost apache
