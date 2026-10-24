@@ -23,6 +23,11 @@ ENV PYTHONUNBUFFERED=1 \
 # generics and typing.Final, neither of which exists in the 3.7 that Django
 # runs on. The two interpreters are independent: providers/ is standard
 # library only and never imports Django.
+#
+# Bullseye LTS ended in August 2026 and its packages moved to
+# archive.debian.org; deb.debian.org now answers 404 for them. Staying on
+# bullseye keeps MariaDB at 10.5, which is what the production volume holds.
+RUN sed -i 's#http://deb.debian.org#http://archive.debian.org#' /etc/apt/sources.list
 RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
