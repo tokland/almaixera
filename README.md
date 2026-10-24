@@ -93,10 +93,10 @@ No esta al repositori. La imatge hi posa el sample com a fallback; en mode
 prod, si tens django1/email_settings.py al working copy, docker/start.sh el
 munta a sobre perque els correus surtin de veritat.
 
-### Deploy a PRO (zaudera)
+### Deploy a PRO (zaudera2)
 
-PRO es un contenidor docker (almaixera-prod) que corre al servidor zaudera,
-construit a partir del checkout que hi ha a ~/src/almaixera. Per pujar codi
+PRO es un contenidor docker (almaixera-prod) que corre al servidor zaudera2,
+construit a partir del checkout que hi ha a ~/src/rostoll/almaixera. Per pujar codi
 nou hi ha docker/deploy-pro.sh, que es llenca des de la maquina de
 desenvolupament:
 
@@ -142,8 +142,8 @@ d'ordres tenen preferencia sobre el fitxer.
 
 Opcions:
 
-	    HOST              destinacio ssh (per defecte: zaudera)
-	-d, --dir PATH        checkout al servidor (per defecte: ~/src/almaixera)
+	    HOST              destinacio ssh (per defecte: zaudera2)
+	-d, --dir PATH        checkout al servidor (per defecte: ~/src/rostoll/almaixera)
 	-n, --dry-run         ensenya que s'enviaria i para
 	    --delete          esborra al servidor els fitxers que ja no existeixen
 	    --with-settings   envia tambe settings.py i email_settings.py
@@ -159,8 +159,8 @@ Opcions:
 
 Si el deploy falla, l'script diu com tornar enrere:
 
-	$ ssh zaudera 'docker tag almaixera:previous almaixera:latest && \
-	    cd ~/src/almaixera && docker/start.sh --mode prod --restart unless-stopped'
+	$ ssh zaudera2 'docker tag almaixera:previous almaixera:latest && \
+	    cd ~/src/rostoll/almaixera && docker/start.sh --mode prod --restart unless-stopped'
 
 Amb docker/pro.env al lloc, el deploy i l'activacio de la sincronitzacio
 setmanal son la mateixa ordre, sense cap secret escrit:
@@ -304,7 +304,7 @@ $ python manage.py runserver
 Deploy
 ------
 (Notes antigues de la instal.lacio amb Apache + virtualenv. PRO ara corre amb
-docker a zaudera: veure "Deploy a PRO (zaudera)" mes amunt.)
+docker a zaudera2: veure "Deploy a PRO (zaudera2)" mes amunt.)
 
 - clone project
 - adjust permissions: folder , db.sqlite3

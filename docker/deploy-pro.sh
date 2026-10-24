@@ -3,8 +3,8 @@
 #
 # Usage: docker/deploy-pro.sh [options] [HOST]
 #
-#   HOST                  ssh target (default: zaudera)
-#   -d, --dir PATH        remote checkout (default: ~/src/almaixera)
+#   HOST                  ssh target (default: zaudera2)
+#   -d, --dir PATH        remote checkout (default: ~/src/rostoll/almaixera)
 #   -n, --dry-run         show what would be sent and stop; changes nothing
 #       --delete          also remove remote files that are gone locally
 #       --with-settings   sync django1/settings.py and email_settings.py too
@@ -40,8 +40,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO_DIR=$PWD
 
-HOST=zaudera
-REMOTE_DIR='~/src/almaixera'
+HOST=zaudera2
+REMOTE_DIR='~/src/rostoll/almaixera'
 DRY_RUN=0
 DELETE=0
 WITH_SETTINGS=0
