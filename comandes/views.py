@@ -92,21 +92,22 @@ def get_productes( request, data_recollida ):
     # seleccionem proveidors actius per la coope
     activa_provs = ActivaProveidor.objects.filter(Q(data=None)|Q(data=data_recollida))\
                     .filter(cooperativa=coope,actiu=True)
-    active_prod_ids = []
-    # iterem proveidors actius
-    for activa_prov in activa_provs:
-        activa_prods = ActivaProducte.objects.filter(activa_proveidor=activa_prov,actiu=True)
-        # iterem productes actius
-        for activa_prod in activa_prods:
-            active_prod_ids.append( activa_prod.producte.id )
+    # subquery: evitem fer una query per cada producte actiu
+    active_prod_ids = ActivaProducte.objects\
+                    .filter(activa_proveidor__in=activa_provs,actiu=True)\
+                    .values('producte_id')
     productes = Producte.objects\
                     .filter( actiu=True, stock=False, id__in=active_prod_ids )\
-                    .extra(select={'lower_name':'lower(nom)'})\
+                    .select_related('proveidor')\
+                    .extra(select={'lower_name':'lower(comandes_producte.nom)'})\
                     .order_by('proveidor','lower_name')
     # creem 2 QS: "Productes" no es pot ordenar, ja que el camp "order" esta a ActivaProducte i no a Producte
     # productes s'utilitza per crear el form, i aprods per renderitzar ordernadament el HTML
+    # select_related: el template accedeix a producte, proveidor i activa_proveidor per cada fila
     aprods = ActivaProducte.objects.filter(activa_proveidor__in=activa_provs,actiu=True,producte__actiu=True)\
-                .extra(select={'lower_name':'lower(nom)'})\
+                .select_related('producte__proveidor','cooperativa',
+                                'activa_proveidor__proveidor','activa_proveidor__cooperativa')\
+                .extra(select={'lower_name':'lower(comandes_producte.nom)'})\
                 .order_by('-activa_proveidor__ordre','activa_proveidor','lower_name')
     if len(productes)!=len(aprods):
         print("ERROR in get_productes (views)")
