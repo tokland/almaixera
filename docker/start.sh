@@ -6,7 +6,8 @@
 #   -m, --mode dev|prod   dev runs runserver with DEBUG and bind-mounts the
 #                         working copy for live reload; prod runs uwsgi off the
 #                         code baked into the image (default: dev)
-#   -p, --port PORT       host port to publish (default: 5000)
+#   -p, --port PORT       host port to publish on 127.0.0.1 (default: 5000;
+#                         env BIND=0.0.0.0 to expose it on all interfaces)
 #   -n, --name NAME       container name (default: almaixera-<mode>)
 #   -r, --reload-db       restore the dump even if this container's volume was
 #                         already seeded (destroys the current database)
@@ -90,6 +91,7 @@ IMAGE=${IMAGE:-almaixera}
 TAG=${TAG:-latest}
 MODE=${MODE:-dev}
 PORT=${PORT:-5000}
+BIND=${BIND:-127.0.0.1}
 NAME=${NAME:-}
 RELOAD_DB=${RELOAD_DB:-0}
 DETACH=1
@@ -135,7 +137,7 @@ VOLUME="${NAME}-db"
 docker image inspect "${IMAGE}:${TAG}" >/dev/null 2>&1 \
     || die "image ${IMAGE}:${TAG} not found -- run docker/build.sh first"
 
-args=(run --name "$NAME" -p "${PORT}:5000"
+args=(run --name "$NAME" -p "${BIND}:${PORT}:5000"
       --restart "$RESTART"
       -v "${VOLUME}:/var/lib/mysql"
       -e "MODE=$MODE" -e "PORT=5000" -e "RELOAD_DB=$RELOAD_DB")
