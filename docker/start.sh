@@ -18,8 +18,8 @@
 #       --sync-password P almaixera password for the weekly provider sync;
 #                         without it no sync is scheduled (env: SYNC_PASSWORD)
 #       --sync-user U     almaixera user for that sync (default: admin)
-#       --sync-schedule C cron expression for it (default: "0 1 * * 3",
-#                         Wednesday at 01:00 Europe/Madrid)
+#       --sync-schedule C cron expression for it (default: "0 23 * * 2",
+#                         Tuesday at 23:00 Europe/Madrid)
 #       --sync-args "..." extra flags for providers/ecoplaza/sync.sh,
 #                         e.g. --dry-run
 #       --env-file PATH   read settings from this file instead of
@@ -53,7 +53,7 @@ done
 : "${ENV_FILE:=${ALMAIXERA_ENV_FILE:-$REPO_DIR/docker/pro.env}}"
 
 # Parsed as plain KEY=value, not sourced: a cron expression like
-# "SYNC_SCHEDULE=0 1 * * 3" is perfectly good env-file content, but sourcing it
+# "SYNC_SCHEDULE=0 23 * * 2" is perfectly good env-file content, but sourcing it
 # makes bash run "1 * * 3" as a command. Surrounding quotes are optional and
 # stripped if present.
 load_env_file() {
@@ -105,6 +105,13 @@ SYNC_USER=${SYNC_USER:-}
 SYNC_PASSWORD=${SYNC_PASSWORD:-}
 SYNC_SCHEDULE=${SYNC_SCHEDULE:-}
 SYNC_ARGS=${SYNC_ARGS:-}
+# Same for the SMTP notification credentials (see
+# providers/ecoplaza/notify_email.py); an empty SMTP_HOST disables the report.
+SMTP_HOST=${SMTP_HOST:-}
+SMTP_PORT=${SMTP_PORT:-587}
+SMTP_USER=${SMTP_USER:-}
+SMTP_PASSWORD=${SMTP_PASSWORD:-}
+SMTP_TO=${SMTP_TO:-}
 usage() { sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//; $d'; }
 
 while [ "$#" -gt 0 ]; do
@@ -148,7 +155,7 @@ fi
 
 # Only forward what was actually given; the entrypoint has the defaults, and
 # an empty SYNC_PASSWORD is what keeps the sync switched off.
-for var in SYNC_USER SYNC_SCHEDULE SYNC_ARGS; do
+for var in SYNC_USER SYNC_SCHEDULE SYNC_ARGS SMTP_HOST SMTP_PORT SMTP_USER SMTP_TO; do
     if [ -n "${!var}" ]; then
         args+=(-e "${var}=${!var}")
     fi
@@ -159,6 +166,11 @@ done
 if [ -n "$SYNC_PASSWORD" ]; then
     export SYNC_PASSWORD
     args+=(-e SYNC_PASSWORD)
+fi
+
+if [ -n "$SMTP_PASSWORD" ]; then
+    export SMTP_PASSWORD
+    args+=(-e SMTP_PASSWORD)
 fi
 
 # The real SMTP credentials live outside the image; mount them when present so

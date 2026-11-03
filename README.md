@@ -137,8 +137,14 @@ llegeix d'alla. Aixo vol dir que:
   docker nomes el nom de la variable, no el valor.
 
 El fitxer es KEY=value pla, no s'interpreta com a shell, o sigui que
-SYNC_SCHEDULE=0 1 * * 3 va tal qual, sense cometes. Les opcions de la linia
+SYNC_SCHEDULE=0 23 * * 2 va tal qual, sense cometes. Les opcions de la linia
 d'ordres tenen preferencia sobre el fitxer.
+
+A mes del SYNC_*, el fitxer pot dur les credencials SMTP del report que
+cron-sync.sh envia per correu al final de cada sincronitzacio setmanal
+(providers/ecoplaza/notify_email.py): SMTP_HOST, SMTP_PORT, SMTP_USER,
+SMTP_PASSWORD (a Gmail, una contrasenya d'aplicacio) i SMTP_TO. Deixa SMTP_HOST
+buit i el treball setmanal no envia res.
 
 Opcions:
 
@@ -186,8 +192,8 @@ Opcions relacionades de docker/start.sh:
 	    --sync-password P   contrasenya d'almaixera per la sincronitzacio;
 	                        sense aixo no es programa res
 	    --sync-user U       usuari (per defecte: admin)
-	    --sync-schedule C   expressio cron (per defecte: "0 1 * * 3", es a
-	                        dir dimecres a la 01:00, hora Europe/Madrid)
+	    --sync-schedule C   expressio cron (per defecte: "0 23 * * 2", es a
+	                        dir dimarts a les 23:00, hora Europe/Madrid)
 	    --sync-args "..."   arguments extra per providers/ecoplaza/sync.sh,
 	                        per exemple --dry-run
 

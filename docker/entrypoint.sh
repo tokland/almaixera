@@ -19,9 +19,16 @@ DB_PASSWORD=${DB_PASSWORD:-5jitk9}
 # given, so a plain dev container never touches the ecoplaza store.
 SYNC_USER=${SYNC_USER:-admin}
 SYNC_PASSWORD=${SYNC_PASSWORD:-}
-SYNC_SCHEDULE=${SYNC_SCHEDULE:-"0 1 * * 3"}   # Wednesday at 01:00
+SYNC_SCHEDULE=${SYNC_SCHEDULE:-"0 23 * * 2"}   # Tuesday at 23:00
 SYNC_TZ=${SYNC_TZ:-Europe/Madrid}
 SYNC_ARGS=${SYNC_ARGS:-}
+# Optional email report of the weekly run (providers/ecoplaza/notify_email.py,
+# wired in providers/ecoplaza/cron-sync.sh). An empty SMTP_HOST disables it.
+SMTP_HOST=${SMTP_HOST:-}
+SMTP_PORT=${SMTP_PORT:-587}
+SMTP_USER=${SMTP_USER:-}
+SMTP_PASSWORD=${SMTP_PASSWORD:-}
+SMTP_TO=${SMTP_TO:-}
 SYNC_ENV_FILE=/etc/almaixera-sync.env
 CRON_FILE=/etc/cron.d/almaixera-ecoplaza
 
@@ -99,7 +106,7 @@ seed_database() {
 # (see providers/ecoplaza/cron-sync.sh).
 #
 # Timezone: the container clock is UTC, but the schedule is meant as local
-# Spanish time, and 01:00 has to stay 01:00 across DST. Debian's cron does NOT
+# Spanish time, and 23:00 has to stay 23:00 across DST. Debian's cron does NOT
 # support the CRON_TZ crontab variable that cronie has -- it schedules with
 # localtime(), so the timezone has to come from the daemon's own environment.
 # The TZ line in the crontab file gives the job itself the same clock, so its
@@ -121,6 +128,11 @@ ALMAIXERA_URL=$(quote "http://127.0.0.1:${PORT}")
 ALMAIXERA_USER=$(quote "$SYNC_USER")
 ALMAIXERA_PASSWORD=$(quote "$SYNC_PASSWORD")
 SYNC_ARGS=$(quote "$SYNC_ARGS")
+SMTP_HOST=$(quote "$SMTP_HOST")
+SMTP_PORT=$(quote "$SMTP_PORT")
+SMTP_USER=$(quote "$SMTP_USER")
+SMTP_PASSWORD=$(quote "$SMTP_PASSWORD")
+SMTP_TO=$(quote "$SMTP_TO")
 EOF
     umask 022
 

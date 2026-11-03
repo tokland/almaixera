@@ -7,7 +7,9 @@
 # line.
 #
 # Output goes to a log file and, so `docker logs` shows it too, to PID 1's
-# stdout. A lock file keeps a slow run from overlapping the next one.
+# stdout. A lock file keeps a slow run from overlapping the next one. At the
+# end a report email goes out when SMTP_* credentials are set (see
+# notify_email.py in this directory).
 set -uo pipefail
 
 ENV_FILE=${SYNC_ENV_FILE:-/etc/almaixera-sync.env}
@@ -45,8 +47,27 @@ if ! flock -n 9; then
     exit 0
 fi
 
+# Email the outcome with the SMTP_* credentials the env file provides (see
+# notify_email.py in this directory). Without them the job stays silent, and
+# a failed send never alters the run status.
+notify_email() {
+    local status=$1 subject
+    if [ "$status" -eq 0 ]; then
+        subject="[almaixera] ecoplaza sync OK ($(date '+%d/%m %H:%M'))"
+        tail -n 15 "$LOG"
+    else
+        subject="[almaixera] ecoplaza sync FAILED (status $status)"
+        tail -n 50 "$LOG"
+    fi | python3 /app/providers/ecoplaza/notify_email.py --subject "$subject" >>"$LOG" 2>&1 \
+        || echo "[ecoplaza-sync] WARNING: notification email not sent" >>"$LOG"
+}
+
+status=0
 if [ -w /proc/1/fd/1 ]; then
     run 2>&1 | tee -a "$LOG" > /proc/1/fd/1
-    exit "${PIPESTATUS[0]}"
+    status=${PIPESTATUS[0]}
+else
+    run >>"$LOG" 2>&1 || status=$?
 fi
-run >>"$LOG" 2>&1
+notify_email "$status"
+exit "$status"

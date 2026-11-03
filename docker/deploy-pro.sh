@@ -19,7 +19,7 @@
 #       --no-env-file     do not copy any settings file
 #       --sync-password P one-off override of the file's SYNC_PASSWORD
 #       --sync-user U     user for that sync (default: admin)
-#       --sync-schedule C cron expression (default: Wednesday 01:00 Madrid)
+#       --sync-schedule C cron expression (default: Tuesday 23:00 Madrid)
 #       --sync-args "..." extra flags for sync.sh, e.g. --dry-run
 #       --no-build        skip the image build, just restart the container
 #       --prune           docker image prune -f on the host afterwards

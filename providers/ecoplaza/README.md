@@ -12,6 +12,7 @@ Two halves, one per file:
 | `upload_to_almaixera.py` | reconciles that JSON against `/comandes/api/productes/`        |
 | `sync.sh`                | runs the two in order                                          |
 | `cron-sync.sh`           | what the weekly cron job inside the docker container runs      |
+| `notify_email.py`        | emails the run report at the end, configured via `SMTP_*`      |
 
 ## Requirements
 
@@ -50,10 +51,13 @@ the ecoplaza store:
 docker/start.sh --mode prod --sync-password 'secret' rostoll-db.sql.gz
 ```
 
-Default schedule is `0 1 * * 3` (Wednesday at 01:00, `Europe/Madrid`), settable
+Default schedule is `0 23 * * 2` (Tuesday at 23:00, `Europe/Madrid`), settable
 with `--sync-schedule`. Output goes to `/var/log/almaixera/ecoplaza-sync.log`
-and to `docker logs`. See the *Sincronitzacio setmanal* section of the top-level
-README for the full list of flags.
+and to `docker logs`. When the env file (`docker/pro.env`) sets the `SMTP_*`
+credentials, the job also emails a report of every run — OK with the last log
+lines, FAILED with the log tail; see `notify_email.py`. See the
+*Sincronitzacio setmanal* section of the top-level README for the full list of
+flags.
 
 The two steps below are what `sync.sh` chains together, and can also be run on
 their own.
