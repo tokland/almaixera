@@ -10,7 +10,7 @@ which entrypoint.sh copies to /etc/almaixera-sync.env:
     SMTP_PORT       port to connect to (default 587)
     SMTP_USER       account to authenticate (and send) as
     SMTP_PASSWORD   account password (for Gmail: an app password)
-    SMTP_TO         recipient; defaults to SMTP_USER
+    SMTP_TO         recipient(s), comma-separated; defaults to SMTP_USER
 
     $ tail -n 20 ecoplaza-sync.log | notify_email.py --subject "sync failed"
 
