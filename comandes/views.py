@@ -510,14 +510,6 @@ def informe_caixes( request ):
     return render( request, 'informe_caixes.html',
                     {"data":data,"productes":detalls,"cooperativa":coope} )
 
-#http://stackoverflow.com/questions/10567845/how-to-use-the-built-in-password-reset-view-in-django
-@login_required
-def test_email( request ):
-    from django.core.mail import EmailMessage
-    email = EmailMessage('Hello', 'World', to=['emieza@xtec.cat'])
-    email.send()
-    return HttpResponse( "Enviant email" )
-    
 #http://stackoverflow.com/questions/17968781/how-to-add-button-next-to-add-user-button-in-django-admin-site
 @login_required
 def afegeix_proveidors( request ):

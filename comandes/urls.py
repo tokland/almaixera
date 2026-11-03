@@ -23,7 +23,6 @@ urlpatterns = [
     url(r'^informe_proveidors', views.informe_proveidors, name='informe_proveidors'),
     url(r'^informe_caixes_old', views.informe_caixes, name='informe_caixes'),
     path(r'informe_caixes', BoxesReportView.as_view(), name='boxes_report'),
-    url(r'^test_email', views.test_email, name="test_email"),
     url(r'^recuperar_contrasenya/$', PasswordResetView.as_view(), name="recuperar_contrasenya"),
     url(r'^password_reset/$', PasswordResetView.as_view(), name="password_reset"),
     url(r'^password_reset_done/$', PasswordResetDoneView.as_view(), name="password_reset_done"),
