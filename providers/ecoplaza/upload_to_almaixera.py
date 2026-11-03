@@ -10,7 +10,10 @@ almaixera product list exposed by the Django REST Framework API
 * Ecoplaza products that are no longer in the JSON are **disabled**
   (``actiu = False``), never deleted.
 
-Price is the ecoplaza **PVP** (``pvp``). Products with no positive PVP are
+Price is what ecoplaza actually charges us, VAT included: the tariff price
+(``prearticulotarifa``, "P.Tarifa" on the delivery note, VAT excluded) plus
+its VAT (``tpciva``). The ``pvp`` field is only the recommended retail price
+("PVR.R"), not what is invoiced. Products with no positive PVP or tariff are
 still imported, but **disabled** and priced at 0 (see :func:`map_product`).
 
 Matching between an ecoplaza product and an almaixera product is done by the
@@ -163,12 +166,16 @@ def _to_decimal(value: Any) -> Decimal | None:
         return None
 
 
-def compute_price(pvp: Any) -> Decimal | None:
-    """Return the product price (the ecoplaza PVP), rounded to 2 decimals."""
-    base = _to_decimal(pvp)
+def compute_price(tariff: Any, vat_pct: Any) -> Decimal | None:
+    """Return the invoiced price (tariff + VAT), rounded to 2 decimals.
+
+    Matches the delivery note: IMPORTE = UD x P.Tarifa x (1 + %IVA).
+    """
+    base = _to_decimal(tariff)
     if base is None:
         return None
-    return base.quantize(PRICE_QUANT, rounding=ROUND_HALF_UP)
+    vat = _to_decimal(vat_pct) or Decimal(0)
+    return (base * (1 + vat / 100)).quantize(PRICE_QUANT, rounding=ROUND_HALF_UP)
 
 
 def build_notes(raw: dict[str, Any]) -> str:
@@ -184,17 +191,18 @@ def build_notes(raw: dict[str, Any]) -> str:
 def map_product(raw: dict[str, Any], provider_id: int) -> ProductePayload | None:
     """Map one raw ecoplaza product to a :class:`ProductePayload`.
 
-    Products with no positive PVP are still imported, but **disabled**
-    (``actiu = False``) and priced at 0 — they have no retail price in
-    ecoplaza (bulk/kg formats, testers, sets). Returns None (a real skip) only
+    Products with no positive PVP or tariff are still imported, but
+    **disabled** (``actiu = False``) and priced at 0 — they have no retail
+    price in ecoplaza (bulk/kg formats, testers, sets). Returns None (a real skip) only
     when the product lacks a usable code or name.
     """
     sku = str(raw.get("codarticulo", "")).strip()
     nom = str(raw.get("desarticulo", "")).strip()[:NAME_MAX_LEN]
     if not sku or not nom:
         return None
-    price = compute_price(raw.get("pvp"))
-    if price is None or price <= 0:
+    pvp = _to_decimal(raw.get("pvp"))
+    price = compute_price(raw.get("prearticulotarifa"), raw.get("tpciva"))
+    if pvp is None or pvp <= 0 or price is None or price <= 0:
         return ProductePayload(
             sku=sku,
             nom=nom,
