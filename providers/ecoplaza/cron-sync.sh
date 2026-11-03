@@ -22,6 +22,10 @@ mkdir -p "$LOG_DIR" "$(dirname "$LOCK")"
 # shellcheck disable=SC1090
 [ -f "$ENV_FILE" ] && . "$ENV_FILE"
 
+# The env file defines these as shell variables; the notifier is a child
+# process, so they have to be exported for it to see them.
+export SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SMTP_TO
+
 : "${ALMAIXERA_URL:=http://127.0.0.1:5000}"
 : "${ALMAIXERA_USER:=admin}"
 : "${OUTPUT:=/var/lib/almaixera/providers/ecoplaza/products.json}"
@@ -49,16 +53,20 @@ fi
 
 # Email the outcome with the SMTP_* credentials the env file provides (see
 # notify_email.py in this directory). Without them the job stays silent, and
-# a failed send never alters the run status.
+# a failed send never alters the run status. The subject and body are built
+# before the pipeline: bash expands the words of a pipeline's right side in
+# the parent scope, so a variable assigned inside the left side would be
+# unbound there (a real crash under set -u).
 notify_email() {
-    local status=$1 subject
+    local status=$1 subject body
     if [ "$status" -eq 0 ]; then
         subject="[almaixera] ecoplaza sync OK ($(date '+%d/%m %H:%M'))"
-        tail -n 15 "$LOG"
+        body=$(tail -n 15 "$LOG")
     else
         subject="[almaixera] ecoplaza sync FAILED (status $status)"
-        tail -n 50 "$LOG"
-    fi | python3 /app/providers/ecoplaza/notify_email.py --subject "$subject" >>"$LOG" 2>&1 \
+        body=$(tail -n 50 "$LOG")
+    fi
+    printf '%s' "$body" | python3 /app/providers/ecoplaza/notify_email.py --subject "$subject" >>"$LOG" 2>&1 \
         || echo "[ecoplaza-sync] WARNING: notification email not sent" >>"$LOG"
 }
 
